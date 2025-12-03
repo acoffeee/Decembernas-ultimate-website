@@ -1,239 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Card Database</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1 {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .filter-box {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    input, select, button {
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      cursor: pointer;
-      background: #444;
-      color: white;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 15px;
-      box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .card img {
-      width: 250px;
-      height: auto;
-      object-fit: contain;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-
-    /* responsive tweak for smaller screens */
-    @media (max-width: 600px) {
-      .card img {
-        width: 100%;
-        height: auto;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Database</title>
+<style>
+body { font-family: Arial; background: #f2f2f2; margin:0; padding:20px; }
+h1 { font-size:32px; font-weight:bold; margin-bottom:20px; }
+.filter-box { background:white; padding:20px; border-radius:12px; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:15px; margin-bottom:20px; }
+input, select, button { padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; }
+button { cursor:pointer; background:#444; color:white; }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px; }
+.card { background:white; padding:15px; border-radius:15px; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:flex; flex-direction:column; align-items:center; position:relative; }
+.card img { width:250px; height:auto; object-fit:contain; border-radius:10px; margin-bottom:10px; }
+.duplicate-badge { position:absolute; top:5px; right:5px; background:red; color:white; padding:5px 8px; border-radius:50%; font-weight:bold; }
+.pagination { margin:20px 0; display:flex; gap:10px; align-items:center; }
+.pagination input { width:60px; }
+</style>
 </head>
 <body>
-  <h1>Card Database</h1>
+<h1>Card Database</h1>
 
-  <div class="filter-box">
-    <!-- Search + which field to search -->
-    <div style="grid-column: span 2; display: flex; gap: 10px;">
-      <input type="text" id="search" placeholder="Search..." style="flex: 1;">
-      <select id="searchFilter">
-        <option value="name">Name</option>
-        <option value="rarity">Rarity</option>
-        <option value="type">Type</option>
-      </select>
-    </div>
-
-    <!-- Top-level selects for rarity and type (fixes runtime error) -->
-    <select id="rarity">
-      <option value="">All rarities</option>
-      <option value="Common">Common</option>
-      <option value="Rare">Rare</option>
-      <option value="Epic">Epic</option>
+<div class="filter-box">
+  <!-- Search -->
+  <div style="grid-column: span 2; display:flex; gap:10px;">
+    <input type="text" id="search" placeholder="Search..." style="flex:1;">
+    <select id="searchFilter">
+      <option value="username">Username</option>
+      <option value="cardname">Card Name</option>
+      <option value="userTeamName">Team Name</option>
+      <option value="status">Status</option>
+      <option value="type">Type</option>
     </select>
-
-    <select id="type">
-      <option value="">All types</option>
-      <option value="Monster">Monster</option>
-      <option value="Spell">Spell</option>
-      <option value="Weapon">Weapon</option>
-    </select>
-
-    <!-- container for dynamically added filters -->
-    <div id="extraFilters" style="grid-column: span 2; display: flex; flex-direction: column; gap: 10px;"></div>
-
-    <button onclick="addFilter()">Add Filter</button>
-    <button onclick="resetFilters()">Reset</button>
   </div>
 
-  <div class="card-grid" id="cardGrid"></div>
+  <!-- Top-level filters -->
+  <select id="status">
+    <option value="">All Statuses</option>
+    <option value="Available">Market</option>
+    <option value="Owned">Collection</option>
+  </select>
 
-  <script>
-    const cards = [
-      { id: 1, name: "Fire Dragon", rarity: "Rare", type: "Monster", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 2, name: "Aqua Spirit", rarity: "Common", type: "Spell", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 3, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 4, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 5, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 6, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 7, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 8, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" },
-      { id: 9, name: "Shadow Blade", rarity: "Epic", type: "Weapon", image: "https://i.postimg.cc/d07ZKtSc/template2.png" }
-    ];
+  <select id="type">
+    <option value="">All Types</option>
+    <option value="Show Card">Show cards</option>
+    <option value="Grid Card">Grid Cards</option>
+    <option value="Joker Card">Joker Cards</option>
+  </select>
 
-    const grid = document.getElementById("cardGrid");
-    const search = document.getElementById("search");
-    const rarity = document.getElementById("rarity");
-    const type = document.getElementById("type");
+  <!-- Dynamic filters -->
+  <div id="extraFilters" style="grid-column: span 2; display:flex; flex-direction:column; gap:10px;"></div>
+  <button onclick="addFilter()">Add Filter</button>
+  <button onclick="resetFilters()">Reset</button>
 
-    function displayCards() {
-      grid.innerHTML = "";
+  <!-- Optional duplicate filter -->
+  <div style="grid-column: span 2;">
+    <label><input type="checkbox" id="removeDuplicates"> Remove duplicates</label>
+  </div>
+</div>
 
-      let filtered = cards.slice(); // start with all cards
+<div class="pagination">
+  <button id="prevPage">Previous</button>
+  <span>Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+  <button id="nextPage">Next</button>
+  <input type="number" id="pageSize" value="20" min="1" max="100">
+  <span>cards per page</span>
+</div>
 
-      // Only apply search if user typed something
-      const searchValue = (search.value || '').toLowerCase().trim();
-      const searchKey = document.getElementById("searchFilter").value;
-      if (searchValue !== "") {
-        filtered = filtered.filter(card => {
-          const val = (card[searchKey] || '').toString().toLowerCase();
-          return val.includes(searchValue);
-        });
-      }
+<div class="card-grid" id="cardGrid"></div>
 
-      // Apply top-level rarity/type selects if chosen
-      if (rarity.value) {
-        filtered = filtered.filter(card => card.rarity === rarity.value);
-      }
-      if (type.value) {
-        filtered = filtered.filter(card => card.type === type.value);
-      }
+<script>
+let cards = [];
+let currentPage = 1;
+let totalPages = 1;
 
-      // Extra added filters (dynamically added by user)
-      const filterRows = document.querySelectorAll('.filter-row');
-      filterRows.forEach(row => {
-        const key = row.querySelector('.filter-key').value;
-        const value = row.querySelector('.filter-value').value;
-        if (value.trim() !== "") {
-          filtered = filtered.filter(card => (card[key] || '').toString() === value);
-        }
-      });
+const grid = document.getElementById("cardGrid");
+const search = document.getElementById("search");
+const searchFilter = document.getElementById("searchFilter");
+const statusFilter = document.getElementById("status");
+const typeFilter = document.getElementById("type");
+const removeDuplicatesCheckbox = document.getElementById("removeDuplicates");
 
-      // If nothing matches, show a friendly message
-      if (filtered.length === 0) {
-        const msg = document.createElement('div');
-        msg.textContent = 'No cards match the filters.';
-        grid.appendChild(msg);
-        return;
-      }
+async function fetchCards() {
+  const pageSize = parseInt(document.getElementById("pageSize").value) || 20;
+  const params = new URLSearchParams();
+  params.set("page", currentPage);
+  params.set("page_size", pageSize);
 
-      filtered.forEach(card => {
-        const div = document.createElement("div");
-        div.className = "card";
+  // Top-level filters
+  if(search.value.trim()) params.set(searchFilter.value, search.value.trim());
+  if(statusFilter.value) params.set("status", statusFilter.value);
+  if(typeFilter.value) params.set("type", typeFilter.value);
 
-        div.innerHTML = `\
-          <img src="${card.image}" alt="${card.name}">\
-          <h2>${card.name}</h2>\
-          <p>Rarity: ${card.rarity}</p>\
-          <p>Type: ${card.type}</p>\
-        `;
+  // Extra filters
+  document.querySelectorAll(".filter-row").forEach(row => {
+    const key = row.querySelector(".filter-key").value;
+    const value = row.querySelector(".filter-value").value.trim();
+    if(value) params.set(key, value);
+  });
 
-        grid.appendChild(div);
-      });
-    }
-
-    function addFilter() {
-      const container = document.getElementById('extraFilters');
-      const row = document.createElement('div');
-      row.className = 'filter-row';
-      row.style.display = 'flex';
-      row.style.gap = '10px';
-
-      // build options for any keys you'd like to expose for quick filtering
-      row.innerHTML = `
-        <select class="filter-key">\
-          <option value="rarity">Rarity</option>\
-          <option value="type">Type</option>\
-          <option value="name">Name</option>\
-        </select>\
-        <input class="filter-value" placeholder="Value (exact match)" />\
-        <button type="button" class="remove-filter">Remove</button>
-      `;
-
-      container.appendChild(row);
-
-      // attach remove handler
-      row.querySelector('.remove-filter').addEventListener('click', () => {
-        row.remove();
-        displayCards();
-      });
-
-      // re-run display when user changes this new filter
-      row.querySelector('.filter-key').addEventListener('change', displayCards);
-      row.querySelector('.filter-value').addEventListener('input', displayCards);
-    }
-
-    function resetFilters() {
-      search.value = "";
-      document.getElementById('extraFilters').innerHTML = '';
-      rarity.value = "";
-      type.value = "";
-      displayCards();
-    }
-
-    // hook up events
-    search.addEventListener("input", displayCards);
-    document.getElementById("searchFilter").addEventListener("change", displayCards);
-    rarity.addEventListener("change", displayCards);
-    type.addEventListener("change", displayCards);
-
-    // initial render
+  try {
+    const res = await fetch(`/getCards?${params.toString()}`);
+    const data = await res.json();
+    cards = data.cards || [];
+    totalPages = data.total_pages || 1;
+    document.getElementById("currentPage").textContent = currentPage;
+    document.getElementById("totalPages").textContent = totalPages;
     displayCards();
-  </script>
+  } catch(err) {
+    console.error(err);
+    grid.innerHTML = "<div>Error fetching cards</div>";
+  }
+}
+
+function displayCards() {
+  grid.innerHTML = "";
+  if(cards.length === 0) { grid.innerHTML = "<div>No cards match your filters.</div>"; return; }
+
+  let shownCards = [...cards];
+
+  if(removeDuplicatesCheckbox.checked) {
+    const counts = {};
+    shownCards.forEach(c => { counts[c.cardID] = (counts[c.cardID]||0)+1; });
+    const unique = [];
+    shownCards.forEach(c => { if(!unique.find(u=>u.cardID===c.cardID)) unique.push(c); });
+    shownCards = unique;
+    shownCards.forEach(c => c._duplicateCount = counts[c.cardID]);
+  }
+
+  shownCards.forEach(card => {
+    const div = document.createElement("div");
+    div.className = "card";
+    const duplicateBadge = card._duplicateCount>1 ? `<div class="duplicate-badge">${card._duplicateCount}</div>` : "";
+    div.innerHTML = `
+      <img src="${card.imageURL}" alt="${card.cardname}">
+      ${duplicateBadge}
+      <h2>${card.cardname}</h2>
+      <p><strong>User:</strong> ${card.username}</p>
+      <p><strong>Team:</strong> ${card.userTeamName || "N/A"}</p>
+      <p><strong>Status:</strong> ${card.status}</p>
+      <p><strong>Type:</strong> ${card.type}</p>
+      <p><strong>Price:</strong> $${card.price || "0.00"}</p>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function addFilter() {
+  const container = document.getElementById("extraFilters");
+  const row = document.createElement("div");
+  row.className="filter-row"; row.style.display="flex"; row.style.gap="10px";
+  row.innerHTML = `
+    <select class="filter-key">
+      <option value="username">Username</option>
+      <option value="cardname">Card Name</option>
+      <option value="cardID">Card ID</option>
+      <option value="userTeamName">Team Name</option>
+      <option value="teamID">Team ID</option>
+      <option value="type">Type</option>
+      <option value="status">Status</option>
+      <option value="listedOn">Listed On</option>
+      <option value="price">Price</option>
+    </select>
+    <input class="filter-value" placeholder="Exact match">
+    <button type="button" class="remove-filter">Remove</button>
+  `;
+  container.appendChild(row);
+  row.querySelector(".filter-key").addEventListener("change", () => { currentPage=1; fetchCards(); });
+  row.querySelector(".filter-value").addEventListener("input", () => { currentPage=1; fetchCards(); });
+  row.querySelector(".remove-filter").addEventListener("click", () => { row.remove(); fetchCards(); });
+}
+
+function resetFilters() {
+  search.value = "";
+  document.getElementById("extraFilters").innerHTML = "";
+  statusFilter.value = "";
+  typeFilter.value = "";
+  removeDuplicatesCheckbox.checked = false;
+  currentPage=1;
+  fetchCards();
+}
+
+// Pagination
+document.getElementById("prevPage").addEventListener("click", () => { if(currentPage>1){currentPage--; fetchCards();} });
+document.getElementById("nextPage").addEventListener("click", () => { if(currentPage<totalPages){currentPage++; fetchCards();} });
+document.getElementById("pageSize").addEventListener("change", () => { currentPage=1; fetchCards(); });
+
+// Filters
+search.addEventListener("input", () => { currentPage=1; fetchCards(); });
+searchFilter.addEventListener("change", () => { currentPage=1; fetchCards(); });
+statusFilter.addEventListener("change", () => { currentPage=1; fetchCards(); });
+typeFilter.addEventListener("change", () => { currentPage=1; fetchCards(); });
+removeDuplicatesCheckbox.addEventListener("change", () => displayCards());
+
+// Initial fetch
+fetchCards();
+</script>
 </body>
 </html>
-
