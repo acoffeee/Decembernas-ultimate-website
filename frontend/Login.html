@@ -61,33 +61,59 @@
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Log In</button>
+    <button id="LOGGOINNO">Log In</button>
     <div class="error" id="errorMsg"></div>
   </div>
+<script>
 
-  <script>
     function login() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
       const errorMsg = document.getElementById('errorMsg');
 
-      // Simple dummy check (replace with real authentication)
-      fetch("http://46.224.62.71:8080/api/auth/token", {
+      if (!username || !password) {
+        errorMsg.textContent = "Please enter username and password.";
+        return;
+      }
+
+      fetch("/login", {
         method: "POST",
-        body: JSON.stringify({
-            "username" : "cofffeee",
-            "password" : "NFyYaaePwu3vft"
-        }),
         headers: {
-            "Content-Type": "text/plain",
-            "Origin" : "http://46.224.62.71:8080"
-        }
+          "Content-Type": "application/json",
+          "accept": "application/json"
+        },
+        body: JSON.stringify({
+          username,
+          password
+        })
       })
-      .then(response => response.json())
-      .then(json => console.log(json))
-      .catch(error => console.error("Error:", error));
+      .then( response => {
+        if (!response.ok) {
+          switch(response.status) {
+          case 403:
+            errorMsg.textContent = `Wrong username or password.`;
+            break;
+          default:
+            errorMsg.textContent = response.status;
+            break;
+           }
+        }
+        return response.json();
+      })
+      .then(data => {
+            console.log(data);
+            if(data.redirect) {
+                console.log("had redirect");
+                window.location.href = "/index.html";
+                window.location.reload();
+            }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        errorMsg.textContent = "Login failed. Check your credentials.";
+      });
     }
-  </script>
+    document.getElementById("LOGGOINNO").addEventListener("click", login)
+</script>
 </body>
 </html>
-
